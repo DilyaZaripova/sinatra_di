@@ -2,7 +2,7 @@
 #run Sinatra::Application
 
 root = File.expand_path File.dirname(__FILE__)
-require File.join(root, 'sinatra_di.rb')
+require File.join(root, 'sinatradi.rb')
 
 app = Rack::Builder.app do
   run DiModule::App
