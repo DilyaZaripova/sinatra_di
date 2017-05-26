@@ -25,6 +25,9 @@ Sequel::Seeder.apply(DB, './seeds')
 #        register Sinatra::Namespace
 
 #        namespace '/api/v1' do
+before do
+  content_type 'application/json' #to see perfect in POSTMAN
+end
             get '/' do
                 redirect to('/hello/Dilya')
             end
@@ -46,6 +49,11 @@ Sequel::Seeder.apply(DB, './seeds')
           # соответствует "GET /jobs", "GET /jobs.json", "GET /jobs.xml" и т.д.
           "Да, работает этот маршрут!"
         end
+
+def collection_to_api(collection)#for Array
+  MultiJson.dump(collection.map{|s|s.to_api})
+end
+
 
 #    end
 #end
