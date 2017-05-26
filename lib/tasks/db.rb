@@ -1,15 +1,17 @@
 require 'rake'
 require 'dotenv/tasks'
-
+require 'sequel'
+require 'sequel/extensions/seed'
 namespace :db do
 
   require 'sequel'
+  require 'sequel/extensions/seed'
   Sequel.extension :migration
   environment = ENV['RACK_ENV'] || 'development'
   ENV['DATABASE'] = 'sinatra_di_dev' if environment == 'development'
-  #ENV['DATABASE'] = 'sinatra_di_test' if environment == 'test'
-  #ENV['DATABASE'] = 'sinatra_di_prod' if environment == 'production'
-  # connection_string = ENV['DATABASE_URL'] || ENV["DATABASE_URL_#{environment.upcase}"]
+  ENV['DATABASE'] = 'sinatra_di_test' if environment == 'test'
+  ENV['DATABASE'] = 'sinatra_di_prod' if environment == 'production'
+  connection_string = ENV['DATABASE_URL'] || ENV["DATABASE_URL_#{environment.upcase}"]
   migrations_directory = 'db/migrations'
   connection_string = "postgres://sinatra_di:password@localhost/#{ENV['DATABASE']}"
   puts "ENV['DATABASE'] = #{ENV['DATABASE'].inspect}"
@@ -34,7 +36,7 @@ namespace :db do
   task :migrate, [:version] => [:dotenv] do |_, args|
     version = args[:version]
     raise 'Missing Connection string' if connection_string.nil?
-    # db = Sequel.connect(connection_string)
+    db = Sequel.connect(connection_string)
     message = if version.nil?
                 Sequel::Migrator.run(db, migrations_directory)
                 'Migrated to latest'
@@ -45,11 +47,8 @@ namespace :db do
     puts message if environment != 'test'
   end
 
-  desc 'Perform rollback to specified target or full rollback as default'
-  task :seed do
-    seed_file = File.join('./seeds/*.rb')
-    load(seed_file) if File.exist?(seed_file)
-  end
+
+
 
 
   desc 'Perform rollback to specified target or full rollback as default'
@@ -65,4 +64,23 @@ namespace :db do
     Sequel::Migrator.run(db, migrations_directory)
     Rake::Task['db:version'].execute
   end
+
+  desc 'Perform rollback to specified target or full rollback as default'
+  task :seed do
+    puts 'seed task running'
+    puts 'Check: schema_seeds to be clean!'
+    Sequel::Seed.setup :development # Set the environment
+    Sequel.extension :seed # Load the extension
+    DB = Sequel.connect(
+        adapter: :postgres,
+        database: 'sinatra_di_dev',
+        host: 'localhost',
+        password: 'password',
+        user: 'sinatra_di',
+        max_connections: 10,
+    # logger: Logger.new('log/db.log')
+    )
+    Sequel::Seeder.apply(DB, './seeds') # Apply the seeds/fixtures
+  end
+
 end

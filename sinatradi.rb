@@ -1,15 +1,12 @@
 require 'sinatra'
 require 'sinatra/base'
-require 'sinatra/namespace'
 require 'sequel'
 require 'sequel/extensions/seed'
-
+require 'sinatra/namespace'
 require 'pg'
-
 require 'json'
 require 'multi_json'
 #подтягивание всех файлов из перечисленных папок-сборка
-%w{controllers models routes}.each{|dir|Dir.glob("./#{dir}/*.rb",&method(:require))}
 # Sequel ORM для работой с БД
 DB = Sequel.connect(
   adapter: :postgres,
@@ -19,7 +16,7 @@ DB = Sequel.connect(
   user: 'sinatra_di',
   max_connections: 10,
 )
-
+%w{controllers models routes}.each{|dir|Dir.glob("./#{dir}/*.rb",&method(:require))}
 Sequel::Seed.setup :development
 Sequel.extension :seed
 Sequel::Seeder.apply(DB, './seeds')
